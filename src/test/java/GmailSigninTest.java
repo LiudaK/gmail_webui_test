@@ -1,12 +1,13 @@
+import pageobject.EmailHomePage;
+import webUtil.WebUtil;
+import pageobject.SignInPage;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -25,40 +26,33 @@ public class GmailSigninTest {
 
     @Test
     public void gmailLogingSouldBeSuccesful(){
-
-
-        driver.get("http://gmail.com");
-        //implicit wait
-        driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
-        WebElement usernameTextbox = driver.findElement(By.id("Email"));
-        usernameTextbox.clear();
-        usernameTextbox.sendKeys("luda4utest@gmail.com");
-        driver.findElement(By.id("next")).click();
-        //synchronization, Explicit wait
         WebDriverWait wait = new WebDriverWait(driver, 30);
+//1. go to Gmail website
+        SignInPage signInPage = WebUtil.goToSignInPage(driver);
 
-        WebElement checkbox = driver.findElement(By.id("PersistentCookie"));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("PersistentCookie")));
-      checkbox.click();
+//2. Fill in username
+        // implicit wait
+        signInPage.fillInUserName(driver,"luda4utest@gmail.com");
 
-        WebElement passwordTextbox = driver.findElement(By.id("Passwd"));
-        passwordTextbox.clear();
-        passwordTextbox.sendKeys("filipenko100");
-        WebElement signInButton = driver.findElement(By.id("signIn"));
-        signInButton.click();
-        driver.findElement(By.partialLinkText("Inbox"));
+//3. fill in password
+        signInPage.fillInPassword(driver, "filipenko100");
 
-       //wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inbox")));
+//4. click sign in
+       EmailHomePage emailHomePage = signInPage.clickSignIn(driver);
+
+ //5. verify user did sign in
+
         //is element present
         Assert.assertTrue("inbox should exist", driver.findElements(By.partialLinkText("Inbox")).size()>0);
-        //sign out
-        WebElement profileButton = driver.findElement(By.cssSelector(".gb_8a.gbii"));
-        profileButton.click();
-        WebElement signoutLinkage = driver.findElement(By.id("gb_71"));
-        signoutLinkage.click();
-        //verify user did fign out
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("Email")));
-        Assert.assertTrue("signIn button should exisy", driver.findElements(By.id("Email")).size()>0);
+//6. sign out
+        signInPage = emailHomePage.signOut(driver);
+
+
+//7. verify user did fign out
+
+        Assert.assertTrue("signIn button should exisy", emailHomePage.isElementExist(driver));
+
+        //Assert.assertTrue("signIn button should exisy", driver.findElements(By.id("Email")).size()>0);
     }
 
     @Test
