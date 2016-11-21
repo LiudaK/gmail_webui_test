@@ -1,4 +1,5 @@
 import pageobject.EmailHomePage;
+import pageobject.EmailViewPage;
 import webUtil.WebUtil;
 import pageobject.SignInPage;
 import org.junit.After;
@@ -57,62 +58,55 @@ public class GmailSigninTest {
 
     @Test
     public void gmailSendAndReciveTest(){
-        driver.get("http://gmail.com");
-        //implicit wait
-        driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
-        WebElement usernameTextbox = driver.findElement(By.id("Email"));
-        usernameTextbox.clear();
-        usernameTextbox.sendKeys("luda4utest@gmail.com");
-        driver.findElement(By.id("next")).click();
-        //synchronization, Explicit wait
-        WebDriverWait wait = new WebDriverWait(driver, 40);
+        //1. go to Gmail website
+        SignInPage signInPage = WebUtil.goToSignInPage(driver);
 
-        WebElement checkbox = driver.findElement(By.id("PersistentCookie"));
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("PersistentCookie")));
-        checkbox.click();
+//2. Fill in username
+        // implicit wait
+        signInPage.fillInUserName(driver,"luda4utest@gmail.com");
 
-        WebElement passwordTextbox = driver.findElement(By.id("Passwd"));
-        passwordTextbox.clear();
-        passwordTextbox.sendKeys("filipenko100");
-        WebElement signInButton = driver.findElement(By.id("signIn"));
-        signInButton.click();
+//3. fill in password
+        signInPage.fillInPassword(driver, "filipenko100");
+
+//4. click sign in
+        EmailHomePage emailHomePage = signInPage.clickSignIn(driver);
+
         //click Compose
-        WebElement composeButton = driver.findElement(By.cssSelector("div[role='button'][gh='cm']"));
-        composeButton.click();
-        WebElement toTextArea = driver.findElement(By.cssSelector("textarea[name='to']"));
-        toTextArea.clear();
-        toTextArea.sendKeys("luda4utest@gmail.com");
+        emailHomePage.clickComposeButton(driver);
+
+        //fill in recipient
+        emailHomePage.fillInRecipient(driver,"luda4utest@gmail.com" );
+
         //fill in a subject
-        WebElement subjectTextArea = driver.findElement(By.cssSelector("input[placeholder='Subject']"));
         final String subject ="Gmail Sent Email Test";
-        subjectTextArea.clear();
-        subjectTextArea.sendKeys(subject);
+        emailHomePage.fillInSubject(driver, subject );
+
         //fill in a body
-        WebElement bodyTextArea = driver.findElement(By.cssSelector("div[aria-label='Message Body'"));
         final String body = "Hello.Good morning";
+        emailHomePage.fillInBody(driver, body);
+        WebElement bodyTextArea = driver.findElement(By.cssSelector("div[aria-label='Message Body'"));
+
         bodyTextArea.clear();
         bodyTextArea.sendKeys(body);
-        // click send
-        //wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[contains(@aria-label,\"Send\")]")));
-        WebElement sendButton = driver.findElement(By.xpath("//div[contains(@aria-label,\"Send\")]"));
-        sendButton.click();
-        //click inbox again
-        //wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//a[contains(@aria-label, 'Inbox')]")));
-        WebElement inboxLinkage = driver.findElement(By.xpath("//a[contains(@aria-label, 'Inbox')]"));
-        inboxLinkage.click();
-        //click email
-        WebElement newEmail = driver.findElement(By.cssSelector("div[class='y6'] span[id] b"));
-        newEmail.click();
-        //verify the email subject and body is correct
-        WebElement subjectArea = driver.findElement(By.cssSelector("h2[class='hP']"));
-        Assert.assertEquals("Subject should be the same", subject, subjectArea.getText());
-        WebElement bodyArea = driver.findElement(By.cssSelector("div[class='nH hx'] div[dir='ltr']"));
-        Assert.assertEquals("Email Body text should be the same", body ,bodyArea.getText());
-        //sign out
-        WebElement profileButton = driver.findElement(By.cssSelector(".gb_8a.gbii"));
-        profileButton.click();
-        WebElement signoutLinkage = driver.findElement(By.id("gb_71"));
-        signoutLinkage.click();
+        //6.  click send
+        emailHomePage.clickSend(driver);
+
+        //7. click inbox again
+        emailHomePage.clickInboxWithNewEmail(driver);
+
+        //8. click email
+        EmailViewPage emailViewPage = emailHomePage.clickNewEmail(driver);
+
+        //9. verify the email subject and body is correct
+        String actualSubject = emailViewPage.getEmailSubjectText(driver);
+
+        Assert.assertEquals("Subject should be the same", subject, actualSubject);
+        String actualBody = emailViewPage.getEmailBodyText(driver);
+
+        Assert.assertEquals("Email Body text should be the same", body ,actualBody);
+        //10. sign out
+        emailHomePage.signOut(driver);
+
     }
     @After
     public void tearDown(){
